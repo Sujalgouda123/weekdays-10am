@@ -1,16 +1,13 @@
-name: Java CI with Maven
+name: Java CI/CD with Maven and Tomcat Deploy
 
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
     branches: [ "main" ]
-  workflow_dispatch:   # allows manual trigger too, from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,14 +19,42 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
+      - name: Build WAR with Maven
         run: mvn -B clean package --file pom.xml
 
-      - name: Run tests
-        run: mvn -B test --file pom.xml
-
-      - name: Upload build artifact
+      - name: Upload WAR as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-jar
-          path: target/*.jar
+          name: app-war
+          path: target/*.war
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download WAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-war
+          path: ./target
+
+      - name: Copy WAR to EC2 Tomcat webapps
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "target/*.war"
+          target: "/home/ec2-user/apache-tomcat-9.0.120/webapps"
+          strip_components: 1
+
+      - name: Restart Tomcat
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            /home/ec2-user/apache-tomcat-9.0.120/bin/shutdown.sh || true
+            sleep 5
+            /home/ec2-user/apache-tomcat-9.0.120/bin/startup.sh
