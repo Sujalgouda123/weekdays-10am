@@ -1,4 +1,4 @@
-name: Java CI/CD with Maven and Tomcat Deploy
+name: Java CI/CD with the Maven and Tomcat Deploy
 
 on:
   push:
