@@ -10,7 +10,7 @@
     <version>1.0.0</version>
     <packaging>war</packaging>
 
-    <name>Beautiful Website</name>
+    <name>My Beautiful Website</name>
     <description>A beautiful website built with Maven</description>
 
     <properties>
