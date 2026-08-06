@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: sujalgouda123/sujalrepo
+  IMAGE_NAME: sujalgouda123/sujalrepo:firstimage
 
 jobs:
   build-and-push:
